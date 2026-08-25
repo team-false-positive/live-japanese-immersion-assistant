@@ -44,7 +44,7 @@ int loadDictionary(const std::string& filepath, ds::HashTable<DictionaryEntry>& 
 int main() {
     ds::HashTable<DictionaryEntry> dictionary;
 
-    int count = loadDictionary("data/sample_dictionary.tsv", dictionary);
+    int count = loadDictionary("data/dictionary_full.tsv", dictionary);
     std::cout << "Loaded " << count << " dictionary entries.\n\n";
 
     std::string testWords[] = {"元気", "学校", "食べる", "図書館", "存在しない単語"};
