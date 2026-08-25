@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Click-to-Lookup Test</title>
+  <style>
+    .word { cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+    .word:hover { background: #ffe4b5; }
+    #popup { margin-top: 20px; padding: 12px; border: 2px solid #333; border-radius: 8px; display: none; max-width: 300px; }
+  </style>
+</head>
+<body>
+  <h2>Click any word:</h2>
+  <p>
+    <span class="word" onclick="handleClick('元気')">元気</span>
+    <span class="word" onclick="handleClick('学校')">学校</span>
+    <span class="word" onclick="handleClick('食べる')">食べる</span>
+    <span class="word" onclick="handleClick('存在しない単語')">存在しない単語</span>
+  </p>
+  <div id="popup"></div>
+
+  <script src="dictionary_bridge.js"></script>
+  <script>
+    let dictModule;
+    createDictModule().then((Module) => {
+      dictModule = Module;
+      dictModule.loadDictionaryFromFile("data/dictionary_full.tsv");
+      console.log("Dictionary loaded and ready.");
+    });
+
+    function handleClick(word) {
+      const result = dictModule.lookupWord(word);
+      const popup = document.getElementById("popup");
+      popup.style.display = "block";
+      if (result === "NOT_FOUND") {
+        popup.innerHTML = `<b>${word}</b><br>Not found in dictionary.`;
+      } else {
+        const [reading, meaning, level] = result.split("|||");
+        popup.innerHTML = `<b>${word}</b> (${reading})<br>${meaning}<br><i>${level || "level not tagged yet"}</i>`;
+      }
+    }
+  </script>
+</body>
+</html>
