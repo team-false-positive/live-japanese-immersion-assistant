@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*"],
-      "js": ["content-scripts/caption-reader.js"],
+      "js": ["content-scripts/caption-reader.js", "content-scripts/subtitle-overlay.js"],
       "run_at": "document_idle"
     }
   ]
