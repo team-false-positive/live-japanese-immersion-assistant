@@ -80,6 +80,7 @@ function handlePotentialCaptionChange() {
 
   if (currentText !== lastCaptionText) {
     lastCaptionText = currentText;
+document.dispatchEvent( new CustomEvent("ljia:caption", { detail: { text: currentText, platform: platform.name, timestamp: Date.now() }, }) );
 
     if (currentText.length > 0) {
       console.log(
