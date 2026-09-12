@@ -2,7 +2,8 @@
 // This is the "service worker" — a script that runs in the background,
 // separate from any web page, for as long as Chrome needs it (it can be
 // stopped and restarted automatically, so never assume it's "always on"
-// or store important state only in variables here — use chrome.storage).
+// or store important state only in variables here — use chrome.storage)
+ import { saveWatchProgress, getWatchProgress } from "./storage/storage.js";
 
 // Runs once, the moment the extension is installed or updated.
 chrome.runtime.onInstalled.addListener((details) => {
@@ -47,6 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ type: "PONG", receivedAt: Date.now() });
     return true; // keep the message channel open for the async response
   }
+ if (message.type === "SAVE_WATCH_PROGRESS") { saveWatchProgress(message.videoId, message.platform, message.timestampSeconds) .then(() => sendResponse({ success: true })) .catch((error) => sendResponse({ success: false, error: error.message })); return true; } if (message.type === "GET_WATCH_PROGRESS") { getWatchProgress(message.videoId) .then((progress) => sendResponse({ progress })) .catch((error) => sendResponse({ progress: null, error: error.message })); return true; }
 
   if (message.type === "TRANSLATE") {
     translateText(message.text)

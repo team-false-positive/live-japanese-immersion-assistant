@@ -5,7 +5,7 @@
   "description": "Reads live Japanese subtitles, looks up words, and tracks vocabulary while you watch.",
   "permissions": ["storage", "scripting"],
   "host_permissions": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*", "https://api.mymemory.translated.net/*"],
-  "background": { "service_worker": "background.js" },
+  "background": { "service_worker": "background.js", "type":"module"},
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "Live Japanese Immersion Assistant",
@@ -16,8 +16,9 @@
   "content_scripts": [
     {
       "matches": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*"],
-      "js": ["content-scripts/caption-reader.js", "content-scripts/subtitle-overlay.js"],
+      "js": ["content-scripts/caption-reader.js", "content-scripts/subtitle-overlay.js", "content-scripts/watch-history.js"],
       "run_at": "document_idle"
     }
   ]
 }
+
