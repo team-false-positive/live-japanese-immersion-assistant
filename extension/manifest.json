@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Reads live Japanese subtitles, looks up words, and tracks vocabulary while you watch.",
   "permissions": ["storage", "scripting"],
-  "host_permissions": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*"],
+  "host_permissions": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*", "https://api.mymemory.translated.net/*"],
   "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "popup/popup.html",
