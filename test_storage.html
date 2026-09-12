@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Storage Test</title>
+</head>
+<body>
+  <h2>Open the console (Ctrl+Shift+I) to see results</h2>
+  <button onclick="testSaveWord()">1. Save a word</button>
+  <button onclick="testGetWord()">2. Retrieve it</button>
+  <button onclick="testWatchProgress()">3. Save watch progress</button>
+  <button onclick="testGetProgress()">4. Retrieve watch progress</button>
+
+  <script type="module">
+    import { saveWord, getSavedWord, saveWatchProgress, getWatchProgress } from './extension/storage/storage.js';
+
+    window.testSaveWord = async () => {
+      const result = await saveWord("元気", { reading: "げんき", meaning: "healthy, energetic" });
+      console.log("Saved:", result);
+    };
+
+    window.testGetWord = async () => {
+      const word = await getSavedWord("元気");
+      console.log("Retrieved:", word);
+    };
+
+    window.testWatchProgress = async () => {
+      const result = await saveWatchProgress("test-video-1", "youtube", 123.5);
+      console.log("Progress saved:", result);
+    };
+
+    window.testGetProgress = async () => {
+      const progress = await getWatchProgress("test-video-1");
+      console.log("Progress retrieved:", progress);
+    };
+  </script>
+</body>
+</html>
