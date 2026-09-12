@@ -19,6 +19,23 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// Takes Japanese text, returns the English translation using MyMemory (free, no API key).
+async function translateText(japaneseText) {
+  const params = new URLSearchParams({
+    q: japaneseText,
+    langpair: "ja|en"
+  });
+
+  const response = await fetch(`https://api.mymemory.translated.net/get?${params}`);
+  const data = await response.json();
+
+  if (data.responseStatus === 200) {
+    return data.responseData.translatedText;
+  } else {
+    throw new Error("Translation failed: " + JSON.stringify(data));
+  }
+}
+
 // Central message hub. Content scripts (caption reader, subtitle overlay,
 // etc.) and the popup/options pages will all send messages here when they
 // need something — e.g. a dictionary lookup that has to go through the
@@ -29,6 +46,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "PING") {
     sendResponse({ type: "PONG", receivedAt: Date.now() });
     return true; // keep the message channel open for the async response
+  }
+
+  if (message.type === "TRANSLATE") {
+    translateText(message.text)
+      .then((translated) => sendResponse({ success: true, translated }))
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true; // keep channel open for the async translation call
   }
 
   // TODO (later weeks): route lookup requests to the WASM dictionary,
