@@ -44,3 +44,61 @@ button {
 button:hover {
   background: #2e3172;
 }
+
+.search-section {
+  margin-bottom: 12px;
+}
+
+.search-section label {
+  font-size: 11px;
+  color: #555555;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.search-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.search-row input {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.search-row button {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+#history-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.result-item {
+  padding: 6px 8px;
+  border: 1px solid #eeeeee;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.result-item:hover {
+  background: #f2f2fb;
+}
+
+.no-results {
+  font-size: 11px;
+  color: #888888;
+  padding: 4px 0;
+}

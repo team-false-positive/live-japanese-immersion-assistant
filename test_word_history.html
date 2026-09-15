@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test: Word Occurrence Search (Module D)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; }
+    button { padding: 8px 12px; margin-right: 8px; cursor: pointer; }
+    input { padding: 6px; width: 200px; }
+    ul { padding-left: 18px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Module D Test — Word Occurrence Search</h1>
+
+  <h2>1. Seed some sample data</h2>
+  <button id="seed-btn">Add sample occurrences</button>
+  <p id="seed-status"></p>
+
+  <h2>2. Search</h2>
+  <input type="text" id="search-input" placeholder="e.g. 大丈夫" />
+  <button id="search-btn">Search</button>
+  <ul id="results"></ul>
+
+  <script type="module">
+    import { recordWordOccurrence, getWordHistory } from "./extension/storage/storage.js";
+
+    document.getElementById("seed-btn").addEventListener("click", async () => {
+      await recordWordOccurrence("大丈夫", "abc123", "youtube", 45, "Terrace House");
+      await recordWordOccurrence("大丈夫", "xyz789", "netflix", 132, "Alice in Borderland");
+      await recordWordOccurrence("ありがとう", "abc123", "youtube", 10, "Terrace House");
+      document.getElementById("seed-status").textContent = "Sample data added.";
+    });
+
+    document.getElementById("search-btn").addEventListener("click", async () => {
+      const word = document.getElementById("search-input").value.trim();
+      const record = await getWordHistory(word);
+      const list = document.getElementById("results");
+      list.innerHTML = "";
+
+      if (!record || record.occurrences.length === 0) {
+        list.innerHTML = "<li>No occurrences found.</li>";
+        return;
+      }
+
+      record.occurrences.forEach((occ) => {
+        const li = document.createElement("li");
+        li.textContent = `${occ.show} (${occ.platform}) at ${occ.timestampSeconds}s`;
+        list.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>

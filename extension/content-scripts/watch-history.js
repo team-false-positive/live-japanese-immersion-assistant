@@ -120,4 +120,19 @@
   // TODO (once Week 4 Module B's popup is finished): wire its "save word"
   // button to also send a { type: "SAVE_WORD", word, data } message here,
   // so words get linked to this same videoId/timestamp automatically.
+
+  // this video to a specific timestamp (used for Netflix/Hotstar, which
+  // don't support a timestamp in the URL the way YouTube does).
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "SEEK_TO") {
+      if (videoEl) {
+        videoEl.currentTime = message.timestampSeconds;
+        sendResponse({ success: true });
+      } else {
+        sendResponse({ success: false });
+      }
+      return true;
+    }
+  });
 })();
+
