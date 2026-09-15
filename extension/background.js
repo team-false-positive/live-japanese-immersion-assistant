@@ -3,7 +3,12 @@
 // separate from any web page, for as long as Chrome needs it (it can be
 // stopped and restarted automatically, so never assume it's "always on"
 // or store important state only in variables here — use chrome.storage)
- import { saveWatchProgress, getWatchProgress } from "./storage/storage.js";
+ import {
+  saveWatchProgress,
+  getWatchProgress,
+  recordWordOccurrence,
+  getWordHistory,
+} from "./storage/storage.js";
 
 // Runs once, the moment the extension is installed or updated.
 chrome.runtime.onInstalled.addListener((details) => {
@@ -57,6 +62,105 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // keep channel open for the async translation call
   }
 
+  if (message.type === "RECORD_WORD_OCCURRENCE") {
+    recordWordOccurrence(
+      message.word,
+      message.videoId,
+      message.platform,
+      message.timestampSeconds,
+      message.show
+    )
+      .then((record) => sendResponse({ success: true, record }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (message.type === "SEARCH_WORD_HISTORY") {
+    getWordHistory(message.word)
+      .then((record) => sendResponse({ occurrences: record ? record.occurrences : [] }))
+      .catch((error) => sendResponse({ occurrences: [], error: error.message }));
+    return true;
+  }
+
+  if (message.type === "JUMP_TO_OCCURRENCE") {
+    jumpToOccurrence(message.occurrence)
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
   // TODO (later weeks): route lookup requests to the WASM dictionary,
   // route "save word" actions to the storage layer, etc.
 });
+
+// Opens (or focuses) the tab for an occurrence's video, and seeks to
+// its saved timestamp.
+async function jumpToOccurrence(occurrence) {
+  const { platform, videoId, timestampSeconds } = occurrence;
+
+  if (platform === "youtube") {
+    // YouTube supports a timestamp directly in the URL -- simplest case.
+    const url = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(timestampSeconds)}s`;
+    const existing = await findTabForVideo(videoId, "youtube.com");
+    if (existing) {
+      await chrome.tabs.update(existing.id, { url, active: true });
+      await chrome.windows.update(existing.windowId, { focused: true });
+    } else {
+      await chrome.tabs.create({ url });
+    }
+    return;
+  }
+
+  // Netflix / Hotstar don't support a timestamp in the URL, so we open
+  // or focus the tab, then tell the content script to seek once the
+  // <video> element is ready.
+  const domain = platform === "netflix" ? "netflix.com" : "hotstar.com";
+  let tab = await findTabForVideo(videoId, domain);
+
+  if (!tab) {
+    const url =
+      platform === "netflix"
+        ? `https://www.netflix.com/watch/${videoId}`
+        : `https://www.hotstar.com${videoId}`;
+    tab = await chrome.tabs.create({ url });
+    await waitForTabLoad(tab.id);
+  } else {
+    await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(tab.windowId, { focused: true });
+  }
+
+  sendSeekWithRetry(tab.id, timestampSeconds);
+}
+
+// Finds an already-open tab whose URL matches this video, if any exists.
+async function findTabForVideo(videoId, domainHint) {
+  const tabs = await chrome.tabs.query({ url: `*://*.${domainHint}/*` });
+  return tabs.find((tab) => tab.url && tab.url.includes(videoId));
+}
+
+// Waits for a freshly-opened tab to finish loading its page.
+function waitForTabLoad(tabId) {
+  return new Promise((resolve) => {
+    function listener(updatedTabId, info) {
+      if (updatedTabId === tabId && info.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    }
+    chrome.tabs.onUpdated.addListener(listener);
+  });
+}
+
+// The <video> element can take a moment to appear after the page loads
+// (watch-history.js's own MutationObserver is still searching for it),
+// so retry the SEEK_TO message a few times instead of giving up on the
+// first miss.
+function sendSeekWithRetry(tabId, timestampSeconds, attemptsLeft = 5) {
+  chrome.tabs.sendMessage(tabId, { type: "SEEK_TO", timestampSeconds }, (response) => {
+    if (chrome.runtime.lastError || !response || !response.success) {
+      if (attemptsLeft > 0) {
+        setTimeout(() => sendSeekWithRetry(tabId, timestampSeconds, attemptsLeft - 1), 1000);
+      }
+    }
+  });
+}

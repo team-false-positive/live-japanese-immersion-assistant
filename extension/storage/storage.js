@@ -4,9 +4,10 @@
 // a browser extension with zero dependencies.
 
 const DB_NAME = "jimaku_storage";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const WORDS_STORE = "savedWords";
 const HISTORY_STORE = "watchHistory";
+const WORD_HISTORY_STORE = "wordOccurrences";
 
 // Opens (or creates, on first run) the database and its two stores.
 function openDatabase() {
@@ -25,6 +26,12 @@ function openDatabase() {
             if (!db.objectStoreNames.contains(HISTORY_STORE)) {
                 // "videoId" is the primary key -- one history entry per video.
                 db.createObjectStore(HISTORY_STORE, { keyPath: "videoId" });
+            }
+
+            if (!db.objectStoreNames.contains(WORD_HISTORY_STORE)) {
+                // "word" is the primary key -- one entry per word, holding a LIST
+                // of every video/timestamp it was seen at.
+                db.createObjectStore(WORD_HISTORY_STORE, { keyPath: "word" });
             }
         };
 
@@ -96,5 +103,61 @@ async function getWatchProgress(videoId) {
     });
 }
 
+// Records that `word` was seen in `videoId` (on `platform`) at
+// `timestampSeconds`. If the word has never been seen before, a new
+// entry is created. If it HAS been seen before -- on this video, or any
+// other video, on any platform -- the new occurrence is appended to the
+// SAME entry. This is what lets one word collect sightings across
+// Netflix, YouTube, and Hotstar in one place.
+async function recordWordOccurrence(word, videoId, platform, timestampSeconds, show) {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WORD_HISTORY_STORE, "readwrite");
+    const store = tx.objectStore(WORD_HISTORY_STORE);
+    const getRequest = store.get(word);
+
+    getRequest.onsuccess = () => {
+      const existing = getRequest.result;
+      const occurrence = {
+        videoId,
+        platform,
+        show: show || platform,
+        timestampSeconds,
+        recordedAt: Date.now(),
+      };
+
+      const record = existing
+        ? { word, occurrences: [...existing.occurrences, occurrence] }
+        : { word, occurrences: [occurrence] };
+
+      const putRequest = store.put(record);
+      putRequest.onsuccess = () => resolve(record);
+      putRequest.onerror = () => reject(putRequest.error);
+    };
+    getRequest.onerror = () => reject(getRequest.error);
+  });
+}
+
+// Returns every occurrence of `word` across every watched video.
+// Returns undefined if the word has never been recorded (not an error).
+async function getWordHistory(word) {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(WORD_HISTORY_STORE, "readonly");
+    const store = tx.objectStore(WORD_HISTORY_STORE);
+    const request = store.get(word);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 // Exported so both the browser extension and our test file can use these.
-export { saveWord, getSavedWord, saveWatchProgress, getWatchProgress };
+export {
+  saveWord,
+  getSavedWord,
+  saveWatchProgress,
+  getWatchProgress,
+  recordWordOccurrence,
+  getWordHistory,
+};

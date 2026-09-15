@@ -3,7 +3,7 @@
   "name": "Live Japanese Immersion Assistant",
   "version": "0.1.0",
   "description": "Reads live Japanese subtitles, looks up words, and tracks vocabulary while you watch.",
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "scripting", "tabs"],
   "host_permissions": ["*://*.netflix.com/*", "*://*.hotstar.com/*", "*://*.youtube.com/*", "https://api.mymemory.translated.net/*"],
   "background": { "service_worker": "background.js", "type":"module"},
   "action": {
