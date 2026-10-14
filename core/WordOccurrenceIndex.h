@@ -24,6 +24,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 // A single sighting of a word: which show/video it came from and when
@@ -68,11 +69,9 @@ public:
     }
 
     // Returns a pointer to the unified entry for `word`, or nullptr if the
-    // word has never been recorded. Pointer is valid as long as this index
-    // is alive and recordOccurrence() is not called again (hash map
-    // rehashing may invalidate it, consistent with unordered_map semantics
-    // for references/pointers to VALUES only under rehash — callers should
-    // treat the pointer as short-lived, i.e. use-then-discard).
+    // word has never been recorded. Pointer remains valid while this index
+    // is alive; inserting more words may rehash the map but does not
+    // invalidate references to its elements.
     const WordEntry* lookup(const std::string& word) const {
         auto it = index_.find(word);
         if (it == index_.end()) {
