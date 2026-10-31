@@ -3,7 +3,7 @@
 // separate from any web page, for as long as Chrome needs it (it can be
 // stopped and restarted automatically, so never assume it's "always on"
 // or store important state only in variables here — use chrome.storage)
- import {
+import {
   saveWatchProgress,
   getWatchProgress,
   recordWordOccurrence,
@@ -53,7 +53,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ type: "PONG", receivedAt: Date.now() });
     return true; // keep the message channel open for the async response
   }
- if (message.type === "SAVE_WATCH_PROGRESS") { saveWatchProgress(message.videoId, message.platform, message.timestampSeconds) .then(() => sendResponse({ success: true })) .catch((error) => sendResponse({ success: false, error: error.message })); return true; } if (message.type === "GET_WATCH_PROGRESS") { getWatchProgress(message.videoId) .then((progress) => sendResponse({ progress })) .catch((error) => sendResponse({ progress: null, error: error.message })); return true; }
+
+  if (message.type === "SAVE_WATCH_PROGRESS") {
+    saveWatchProgress(message.videoId, message.platform, message.timestampSeconds)
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (message.type === "GET_WATCH_PROGRESS") {
+    getWatchProgress(message.videoId)
+      .then((progress) => sendResponse({ progress }))
+      .catch((error) => sendResponse({ progress: null, error: error.message }));
+    return true;
+  }
 
   if (message.type === "TRANSLATE") {
     translateText(message.text)
@@ -86,6 +99,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     jumpToOccurrence(message.occurrence)
       .then(() => sendResponse({ success: true }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  // ---- Week 6 Module B: live tab-audio capture ----
+  if (message.type === "START_TAB_CAPTURE") {
+    startCapture(message.streamId)
+      .then(() => sendResponse({ ok: true }))
+      .catch((e) => sendResponse({ ok: false, error: String(e) }));
+    return true;
+  }
+
+  if (message.type === "STOP_TAB_CAPTURE") {
+    stopCapture().then(() => sendResponse({ ok: true }));
     return true;
   }
 
@@ -163,4 +189,26 @@ function sendSeekWithRetry(tabId, timestampSeconds, attemptsLeft = 5) {
       }
     }
   });
+}
+
+// ---- Week 6 Module B: live tab-audio capture ----
+
+// Creates the hidden offscreen page (if needed) and tells it to start
+// capturing the tab audio identified by streamId.
+async function startCapture(streamId) {
+  const existing = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"] });
+  if (existing.length === 0) {
+    await chrome.offscreen.createDocument({
+      url: "offscreen/offscreen.html",
+      reasons: ["USER_MEDIA"],
+      justification: "Capture tab audio for live Japanese transcription",
+    });
+  }
+  chrome.runtime.sendMessage({ target: "offscreen", type: "START_CAPTURE", streamId });
+}
+
+// Tells the offscreen page to stop, then closes it.
+async function stopCapture() {
+  chrome.runtime.sendMessage({ target: "offscreen", type: "STOP_CAPTURE" });
+  await chrome.offscreen.closeDocument().catch(() => {});
 }
