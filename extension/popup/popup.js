@@ -74,3 +74,37 @@ searchBtn.addEventListener("click", runSearch);
 searchInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") runSearch();
 });
+
+// ---- Week 6 Module B: tab-audio capture controls ----
+const captureBtn = document.getElementById("capture-btn");
+const captureStatus = document.getElementById("capture-status");
+let capturing = false;
+
+captureBtn.addEventListener("click", () => {
+  if (!capturing) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id }, (streamId) => {
+        if (chrome.runtime.lastError) {
+          captureStatus.textContent = "Could not start: " + chrome.runtime.lastError.message;
+          return;
+        }
+        chrome.runtime.sendMessage({ type: "START_TAB_CAPTURE", streamId }, (response) => {
+          if (response && response.ok) {
+            capturing = true;
+            captureBtn.textContent = "Stop capturing";
+            captureStatus.textContent = "Capturing tab audio...";
+          } else {
+            captureStatus.textContent = "Start failed: " + (response && response.error);
+          }
+        });
+      });
+    });
+  } else {
+    chrome.runtime.sendMessage({ type: "STOP_TAB_CAPTURE" }, () => {
+      capturing = false;
+      captureBtn.textContent = "Start capturing this tab";
+      captureStatus.textContent = "Capture stopped.";
+    });
+  }
+});
