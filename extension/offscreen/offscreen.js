@@ -79,7 +79,11 @@ async function ensurePipeline() {
   pipe = new StreamingPipeline({
     audioWindow: win,
     transcribe: (audio) => engine.transcribe(audio),
-    onText: (text) => console.log("[capture] text:", text),
+    onText: (text) => {
+      console.log("[capture] text:", text);
+      // Send to the background, which forwards it to the captured tab.
+      chrome.runtime.sendMessage({ type: "WHISPER_TEXT", text });
+    },
     sampleRate: SAMPLE_RATE,
     hopSec: HOP_SEC,
   });
