@@ -3,12 +3,17 @@
 // separate from any web page, for as long as Chrome needs it (it can be
 // stopped and restarted automatically, so never assume it's "always on"
 // or store important state only in variables here — use chrome.storage)
+
 import {
   saveWatchProgress,
   getWatchProgress,
   recordWordOccurrence,
   getWordHistory,
 } from "./storage/storage.js";
+
+// Tab that tab-audio capture is running on. Whisper text is sent here.
+// Not kept in storage: if the worker restarts, capture is restarted from the popup.
+let captureTabId = null;
 
 // Runs once, the moment the extension is installed or updated.
 chrome.runtime.onInstalled.addListener((details) => {
@@ -42,10 +47,8 @@ async function translateText(japaneseText) {
   }
 }
 
-// Central message hub. Content scripts (caption reader, subtitle overlay,
-// etc.) and the popup/options pages will all send messages here when they
-// need something — e.g. a dictionary lookup that has to go through the
-// WASM-backed hash table. For now this just proves the wiring works.
+// Central message hub. Content scripts, the popup, and the offscreen page
+// send messages here when they need something.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("[LJIA] Message received in background:", message);
 
@@ -113,6 +116,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "STOP_TAB_CAPTURE") {
     stopCapture().then(() => sendResponse({ ok: true }));
     return true;
+  }
+
+  // ---- Week 6 Module D: fallback routing ----
+  // The offscreen page sends each Whisper transcript here. Forward it to the
+  // captured tab, where caption-router.js decides whether to show it.
+  if (message.type === "WHISPER_TEXT") {
+    if (captureTabId !== null && message.text) {
+      chrome.tabs
+        .sendMessage(captureTabId, { type: "WHISPER_TEXT", text: message.text })
+        .catch(() => {}); // tab may have closed or reloaded; nothing to do
+    }
+    return;
   }
 
   // TODO (later weeks): route lookup requests to the WASM dictionary,
@@ -194,8 +209,12 @@ function sendSeekWithRetry(tabId, timestampSeconds, attemptsLeft = 5) {
 // ---- Week 6 Module B: live tab-audio capture ----
 
 // Creates the hidden offscreen page (if needed) and tells it to start
-// capturing the tab audio identified by streamId.
+// capturing the tab audio identified by streamId. Remembers the tab that
+// is being captured, so Whisper text can be sent back to it.
 async function startCapture(streamId) {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  captureTabId = tab ? tab.id : null;
+
   const existing = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"] });
   if (existing.length === 0) {
     await chrome.offscreen.createDocument({
@@ -209,6 +228,7 @@ async function startCapture(streamId) {
 
 // Tells the offscreen page to stop, then closes it.
 async function stopCapture() {
+  captureTabId = null;
   chrome.runtime.sendMessage({ target: "offscreen", type: "STOP_CAPTURE" });
   await chrome.offscreen.closeDocument().catch(() => {});
 }
