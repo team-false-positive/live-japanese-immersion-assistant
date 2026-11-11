@@ -2,3 +2,6 @@ test_queue
 test_priority_queue
 *.Zone.Identifier
 test_graph
+extension/wasm/whisper*
+*.bin
+extension/whisper/
