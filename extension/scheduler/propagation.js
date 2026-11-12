@@ -4,12 +4,13 @@
 //
 // When a word is answered wrong, words that share a kanji with it (found in
 // the word graph from Week 4 C) are pulled earlier in the review queue, so
-// the learner meets them again soon. The closer the word, the sooner it comes back:
-//   - strength = decay ^ hops   (fades with distance)
+// the learner meets them again soon.
+//   - strength = decay ^ hops          (fades with distance)
 //   - delay    = baseDelayMs * (1 - strength)
-// With the defaults (decay 0.5, base one day):
-//   - one hop away:  strength 0.5,  delay half a day
-//   - two hops away: strength 0.25, delay three-quarters of a day
+//   - each word passes on the pull to at most maxPerWord of its strongest
+//     neighbors (by shared-kanji weight). This keeps one wrong answer from
+//     crowding the queue: the kanji-sharing graph is dense, and without a cap
+//     two hops can reach a large share of the deck.
 // A related card's due time becomes now + delay, but only if that is earlier
 // than its current due time. Cards are never pushed later.
 // Words beyond maxHops, and words with no link, are left untouched.
@@ -22,7 +23,12 @@
 // graph:   result of buildWordGraph() from extension/graph/word-graph.js
 // Returns a new array of cards. The inputs are not changed.
 function propagateWrongAnswer(cards, graph, wrongWord, now, options = {}) {
-  const { maxHops = 2, decay = 0.5, baseDelayMs = 24 * 60 * 60 * 1000 } = options;
+  const {
+    maxHops = 2,
+    decay = 0.5,
+    baseDelayMs = 24 * 60 * 60 * 1000,
+    maxPerWord = 10,
+  } = options;
 
   // Breadth-first walk from the wrong word, recording how many hops away each word is.
   const hopOf = new Map([[wrongWord, 0]]);
@@ -32,7 +38,11 @@ function propagateWrongAnswer(cards, graph, wrongWord, now, options = {}) {
     for (const word of frontier) {
       const row = graph.edges.get(word);
       if (!row) continue;
-      for (const neighbor of row.keys()) {
+      // Strongest neighbors first; only the top maxPerWord are passed on.
+      const ranked = [...row.entries()]
+        .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+        .slice(0, maxPerWord);
+      for (const [neighbor] of ranked) {
         if (!hopOf.has(neighbor)) {
           hopOf.set(neighbor, hop);
           next.push(neighbor);
