@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kanji explorer</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 24px; max-width: 720px; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 16px; margin-top: 24px; }
+    #status, #info { color: #666; }
+    .big { font-size: 96px; margin: 8px 0; }
+    button.k { font-size: 20px; padding: 6px 12px; margin: 4px; border: 1px solid #bbb;
+               border-radius: 6px; background: #fff; cursor: pointer; }
+    button.k:hover { background: #f2f4ff; }
+    button.part { font-size: 22px; padding: 8px 14px; margin: 4px; border: 1px solid #0b57d0;
+                  border-radius: 6px; background: #eef3ff; cursor: pointer; }
+    #kanji-input { font-size: 18px; padding: 6px; width: 120px; }
+  </style>
+</head>
+<body>
+  <h1>Kanji explorer</h1>
+  <p id="status">Loading...</p>
+
+  <div>
+    <input id="kanji-input" type="text" placeholder="Type a kanji" />
+    <button id="go">Show</button>
+  </div>
+
+  <h2>Kanji in your deck</h2>
+  <div id="known"></div>
+
+  <div id="kanji-view" hidden>
+    <div id="big" class="big"></div>
+    <div id="info"></div>
+    <div id="parts"></div>
+    <div id="results"></div>
+  </div>
+
+  <!-- Shared logic. Plain script with global functions. -->
+  <script src="kanji-tree.js"></script>
+  <script src="kanji.js"></script>
+</body>
+</html>
