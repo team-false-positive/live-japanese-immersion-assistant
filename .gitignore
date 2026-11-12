@@ -5,3 +5,4 @@ test_graph
 extension/wasm/whisper*
 *.bin
 extension/whisper/
+test_nary_tree
