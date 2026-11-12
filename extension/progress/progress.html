@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JLPT progress</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 24px; max-width: 640px; }
+    h1 { font-size: 20px; }
+    #status { color: #666; }
+    .row { margin: 14px 0; }
+    .label { font-size: 16px; margin-bottom: 4px; }
+    .meta { color: #666; font-size: 13px; margin-top: 4px; }
+    .bar { background: #e6e9f2; border-radius: 6px; height: 22px; overflow: hidden; }
+    .fill { background: #3d5afe; height: 100%; }
+  </style>
+</head>
+<body>
+  <h1>JLPT progress</h1>
+  <p id="status">Loading...</p>
+  <div id="levels"></div>
+
+  <!-- Shared logic. Plain script with global functions. -->
+  <script src="progress-logic.js"></script>
+  <script src="progress.js"></script>
+</body>
+</html>
