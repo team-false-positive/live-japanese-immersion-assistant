@@ -15,10 +15,16 @@ function loadDeck() {
   });
 }
 
+// Returns the parsed level list, or null if the file is missing or unreadable.
+// Chrome rejects a request for a missing extension file, so that is caught here.
 async function loadLevelList() {
-  const response = await fetch(chrome.runtime.getURL("data/jlpt-levels.tsv"));
-  if (!response.ok) return null;
-  return parseLevels(await response.text());
+  try {
+    const response = await fetch(chrome.runtime.getURL("data/jlpt-levels.tsv"));
+    if (!response.ok) return null;
+    return parseLevels(await response.text());
+  } catch (e) {
+    return null;
+  }
 }
 
 function drawRow(row) {
@@ -47,16 +53,20 @@ function drawRow(row) {
 }
 
 async function init() {
-  const entries = await loadLevelList();
-  if (!entries || entries.length === 0) {
-    statusEl.textContent =
-      "No JLPT level list loaded yet. Add data/jlpt-levels.tsv (word, tab, level N5 to N1) to the extension.";
-    return;
+  try {
+    const entries = await loadLevelList();
+    if (!entries || entries.length === 0) {
+      statusEl.textContent =
+        "No JLPT level list loaded yet. Add data/jlpt-levels.tsv (word, tab, level N5 to N1) to the extension.";
+      return;
+    }
+    const deck = await loadDeck();
+    const rows = levelProgress(entries, deck);
+    statusEl.textContent = `${entries.length} words on the level list. ${Object.keys(deck).length} words in your deck.`;
+    for (const row of rows) drawRow(row);
+  } catch (e) {
+    statusEl.textContent = "Could not load progress: " + e.message;
   }
-  const deck = await loadDeck();
-  const rows = levelProgress(entries, deck);
-  statusEl.textContent = `${entries.length} words on the level list. ${Object.keys(deck).length} words in your deck.`;
-  for (const row of rows) drawRow(row);
 }
 
 init();
