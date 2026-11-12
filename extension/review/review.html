@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Review</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 24px; max-width: 640px; }
+    h1 { font-size: 20px; }
+    #progress { color: #666; }
+    .word { font-size: 48px; margin: 8px 0 0; }
+    .reading { color: #666; font-size: 18px; margin-bottom: 16px; }
+    .choice { display: block; width: 100%; text-align: left; padding: 10px 14px; margin: 6px 0;
+              font-size: 16px; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; }
+    .choice:hover { background: #f2f4ff; }
+    .choice.right { background: #d8f5dc; border-color: #2e7d32; }
+    .choice.wrong { background: #fde2e2; border-color: #c62828; }
+    #feedback { margin: 12px 0; font-size: 16px; }
+    #next { padding: 8px 18px; font-size: 15px; }
+    #addbox { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 16px; }
+    #add-status { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Review</h1>
+  <p id="progress">Loading...</p>
+
+  <div id="session" hidden>
+    <div id="word" class="word"></div>
+    <div id="reading" class="reading"></div>
+    <div id="choices"></div>
+    <div id="feedback"></div>
+    <button id="next" hidden>Next</button>
+  </div>
+
+  <p id="empty" hidden>Nothing is due right now. Add words below, or come back later.</p>
+
+  <div id="addbox">
+    <label for="add-input">Add a word to review (a dictionary word):</label><br />
+    <input id="add-input" type="text" placeholder="e.g. 明白" />
+    <button id="add-btn">Add</button>
+    <p id="add-status"></p>
+  </div>
+
+  <!-- Shared logic. Each file is a plain script that defines its functions globally. -->
+  <script src="../graph/word-graph.js"></script>
+  <script src="../scheduler/scheduler.js"></script>
+  <script src="../scheduler/propagation.js"></script>
+  <script src="review.js"></script>
+</body>
+</html>
