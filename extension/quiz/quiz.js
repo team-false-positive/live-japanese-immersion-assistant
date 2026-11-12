@@ -1,12 +1,12 @@
 // extension/quiz/quiz.js
-// Week 8 Module A: quiz page.
+// Week 8 Module A and B: quiz page.
 //
 // Uses the same deck as the review screen (chrome.storage.local "cards"), so
 // answers here affect the same schedule. Wrong answers also run propagation.
+// In multiple-choice mode, wrong choices come from graph neighbors.
 
 const CARDS_KEY = "cards";
 const SESSION_SIZE = 10;
-const DISTRACTOR_SAMPLE = 30; // random candidates to pick distractors from
 
 const progressEl = document.getElementById("progress");
 const questionEl = document.getElementById("question");
@@ -24,8 +24,8 @@ const againBtn = document.getElementById("again");
 const modeSelect = document.getElementById("mode");
 
 let entryOf = new Map();    // word -> { reading, meaning }
-let allMeanings = [];       // every short meaning, for distractors
-let graph = null;           // word graph, for propagation
+let allMeanings = [];       // every short meaning, used only as a fallback
+let graph = null;           // word graph, for distractors and propagation
 let deck = {};              // word -> card
 let session = null;
 let answered = false;
@@ -33,6 +33,12 @@ let typedMode = false;
 
 function shortMeaning(meaning) {
   return (meaning || "").split(",")[0].trim();
+}
+
+// Short meaning of a dictionary word, for use as a distractor.
+function meaningOfWord(word) {
+  const info = entryOf.get(word);
+  return info ? shortMeaning(info.meaning) : "";
 }
 
 function loadDeck() {
@@ -95,17 +101,14 @@ function showQuestion() {
     return;
   }
 
-  // Show the word, pick its meaning. Distractors come from random other meanings.
+  // Show the word, pick its meaning. Wrong choices are graph neighbors first.
   promptEl.textContent = card.word;
   hintEl.textContent = info.reading;
   choicesEl.hidden = false;
   typedEl.hidden = true;
 
-  const pool = [];
-  for (let i = 0; i < DISTRACTOR_SAMPLE; i++) {
-    pool.push(allMeanings[Math.floor(Math.random() * allMeanings.length)]);
-  }
-  const options = buildMultipleChoice(correct, pool);
+  const distractors = graphDistractors(card.word, correct, graph, meaningOfWord, allMeanings);
+  const options = buildMultipleChoice(correct, distractors);
   for (const option of options) {
     const btn = document.createElement("button");
     btn.className = "choice";

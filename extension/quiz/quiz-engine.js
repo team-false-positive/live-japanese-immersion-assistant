@@ -1,13 +1,16 @@
 // extension/quiz/quiz-engine.js
 //
-// Week 8 Module A: quiz engine (pure logic, no browser APIs).
+// Week 8 Module A and B: quiz engine (pure logic, no browser APIs).
 //
 // Two question types:
 //   - multiple choice: see the word, pick its meaning from four choices
 //   - typed recall:    see the meaning, type the reading in hiragana
 // A session takes a list of due cards (from the scheduler), asks them in
-// order, and keeps score. The page decides what to do with each answer
-// (review and propagation), so this file stays easy to test.
+// order, and keeps score.
+//
+// Week 8 B: wrong choices in multiple choice come from graph neighbors, the
+// words that share a kanji with the question word, so they look similar and
+// are harder to guess. Random meanings are used only as a fallback.
 
 const CHOICE_COUNT = 4;
 
@@ -27,8 +30,28 @@ function checkTyped(typed, reading) {
   return expected.length > 0 && normalizeReading(typed || "") === expected;
 }
 
-// Four options: the correct meaning plus distractors. Distractors are chosen by the
-// caller (Week 8 B supplies graph neighbors). rng returns a number in [0, 1).
+// Wrong choices from the word's graph neighbors, strongest link first.
+// meaningOf(word) returns that word's short meaning. fallback is a list of
+// meanings to draw from when the graph gives too few. rng returns a number in [0, 1).
+function graphDistractors(word, correct, graph, meaningOf, fallback, rng = Math.random, count = CHOICE_COUNT - 1) {
+  const picked = [];
+  const row = graph.edges.get(word);
+  if (row) {
+    const ranked = [...row.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+    for (const [neighbor] of ranked) {
+      const m = meaningOf(neighbor);
+      if (m && m !== correct && !picked.includes(m)) picked.push(m);
+      if (picked.length >= count) break;
+    }
+  }
+  for (let attempts = 0; picked.length < count && attempts < fallback.length * 3; attempts++) {
+    const m = fallback[Math.floor(rng() * fallback.length)];
+    if (m && m !== correct && !picked.includes(m)) picked.push(m);
+  }
+  return picked;
+}
+
+// Four options: the correct meaning plus distractors. rng returns a number in [0, 1).
 function buildMultipleChoice(correct, distractors, rng = Math.random) {
   const options = [correct];
   for (const d of distractors) {
@@ -80,6 +103,7 @@ if (typeof module !== "undefined") {
     toHiragana,
     normalizeReading,
     checkTyped,
+    graphDistractors,
     buildMultipleChoice,
     startSession,
     currentCard,
