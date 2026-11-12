@@ -15,6 +15,10 @@ import {
 // Not kept in storage: if the worker restarts, capture is restarted from the popup.
 let captureTabId = null;
 
+// Last watch position saved. A paused video reports the same position again
+// and again, so identical saves are skipped.
+let lastSaved = null;
+
 // Runs once, the moment the extension is installed or updated.
 chrome.runtime.onInstalled.addListener((details) => {
   console.log("[LJIA] Extension installed/updated:", details.reason);
@@ -58,6 +62,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "SAVE_WATCH_PROGRESS") {
+    const unchanged =
+      lastSaved !== null &&
+      lastSaved.videoId === message.videoId &&
+      lastSaved.timestampSeconds === message.timestampSeconds;
+    if (unchanged) {
+      sendResponse({ success: true, skipped: true });
+      return;
+    }
+    lastSaved = { videoId: message.videoId, timestampSeconds: message.timestampSeconds };
     saveWatchProgress(message.videoId, message.platform, message.timestampSeconds)
       .then(() => sendResponse({ success: true }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
