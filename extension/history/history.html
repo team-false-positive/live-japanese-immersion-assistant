@@ -2,20 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Watch history</title>
+  <title>Library</title>
+  <link rel="stylesheet" href="../ui/theme.css" />
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 24px; max-width: 720px; }
-    h1 { font-size: 20px; }
-    #status { color: #666; }
-    li { margin: 10px 0; }
-    a { color: #0b57d0; }
-    .meta { color: #666; font-size: 13px; }
+    .stats { display: flex; gap: 12px; margin: 12px 0 20px; }
+    .stat { flex: 1; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--indigo); }
+    .stat-label { font-size: 13px; color: var(--muted); }
+    .video-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .video-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .video-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
   </style>
 </head>
 <body>
-  <h1>Watch history</h1>
-  <p id="status">Loading...</p>
-  <ul id="list"></ul>
+  <h1>Library</h1>
+  <p id="status" class="hint">Loading...</p>
+
+  <div id="stats" class="stats" hidden>
+    <div class="card stat">
+      <div id="stat-videos" class="stat-value">0</div>
+      <div class="stat-label">videos watched</div>
+    </div>
+    <div class="card stat">
+      <div id="stat-latest" class="stat-value">-</div>
+      <div class="stat-label">last watched</div>
+    </div>
+  </div>
+
+  <div id="list"></div>
+
+  <!-- Plain script, loaded after the page is drawn. -->
   <script src="history.js"></script>
 </body>
 </html>
