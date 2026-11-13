@@ -1,11 +1,12 @@
 // extension/content-scripts/word-lookup.js
 //
 // Week 4 Module B: click-to-lookup. Week 5 Module B: save word.
+// Week 10 Module B: smart rewind on lookup (uses smart-rewind.js).
 //
 // Click a word in the subtitle bar. The word under the click is found, its
 // dictionary entry is fetched from the background script, and a small bubble
-// shows its reading and meaning, with a Save button. Saving adds the word to
-// the saved-words store, records this occurrence, and adds it to the review deck.
+// shows its reading and meaning, with a Save button. When the word is found,
+// the video steps back a few seconds so the sentence can be heard again.
 
 const JAPANESE_CHAR = /[\u3040-\u30ff\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
 
@@ -150,6 +151,13 @@ document.addEventListener("click", async (event) => {
     run: found.run,
     index: found.index,
   });
+  const entry = response ? response.entry : null;
+
+  // A word was found: step the video back so the sentence can be heard again.
+  if (entry) {
+    applySmartRewind(document.querySelector("video"));
+  }
+
   const clicked = found.run.charAt(found.index);
-  showBubble(event.clientX, event.clientY, response ? response.entry : null, clicked);
+  showBubble(event.clientX, event.clientY, entry, clicked);
 });
