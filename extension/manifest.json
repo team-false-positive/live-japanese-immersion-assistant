@@ -28,6 +28,7 @@
         "content-scripts/subtitle-overlay.js",
         "content-scripts/watch-history.js",
         "content-scripts/caption-router.js",
+        "content-scripts/smart-rewind.js",
         "content-scripts/word-lookup.js"
       ],
       "run_at": "document_idle",
