@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Next words</title>
+  <link rel="stylesheet" href="../ui/theme.css" />
+  <style>
+    .rec-word { font-size: 24px; font-weight: 600; color: var(--indigo); }
+    .rec-reading { color: var(--muted); font-size: 14px; }
+    .rec-meaning { font-size: 15px; margin: 4px 0; }
+    .rec-meta { color: var(--muted); font-size: 13px; }
+    .rec-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Next words</h1>
+  <p id="status" class="hint">Loading...</p>
+  <div id="list"></div>
+
+  <!-- Shared logic. Each file is a plain script with global functions. -->
+  <script src="../graph/word-graph.js"></script>
+  <script src="../recommend/next-words.js"></script>
+  <script src="recommend.js"></script>
+</body>
+</html>
