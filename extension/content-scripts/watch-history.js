@@ -37,15 +37,17 @@
   }
 
   const platform = detectPlatform();
-  const videoId = getVideoId(platform);
+  let videoId = getVideoId(platform);
   console.log("[LJIA] watch-history.js tracking:", { platform, videoId });
 
   let videoEl = null;
+  setInterval(() => { const id = getVideoId(platform); if (id !== videoId) { videoId = id; hasResumed = false; resumePlayback(); } }, 1000);
   let hasResumed = false;
   const SAVE_INTERVAL_MS = 5000;
   const MIN_RESUME_SECONDS = 5; // don't bother "resuming" the first few seconds
 
   function resumePlayback() {
+    videoId = getVideoId(platform);
     if (hasResumed || !videoEl) return;
 
     chrome.runtime.sendMessage({ type: "GET_WATCH_PROGRESS", videoId }, (response) => {
@@ -71,6 +73,7 @@
   }
 
   function saveProgress() {
+    videoId = getVideoId(platform);
     if (!videoEl || videoEl.currentTime === 0) return;
 
     chrome.runtime.sendMessage({
