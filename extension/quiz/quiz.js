@@ -1,5 +1,5 @@
 // extension/quiz/quiz.js
-// Week 8 Module A and B: quiz page.
+// Week 8 Module A and B, restyled in Week 9 Module C.
 //
 // Uses the same deck as the review screen (chrome.storage.local "cards"), so
 // answers here affect the same schedule. Wrong answers also run propagation.
@@ -9,6 +9,7 @@ const CARDS_KEY = "cards";
 const SESSION_SIZE = 10;
 
 const progressEl = document.getElementById("progress");
+const streakEl = document.getElementById("streak");
 const questionEl = document.getElementById("question");
 const promptEl = document.getElementById("prompt");
 const hintEl = document.getElementById("hint");
@@ -56,6 +57,7 @@ function saveDeck() {
 function startNewSession() {
   const due = dueWords(Object.values(deck), Date.now());
   feedbackEl.textContent = "";
+  feedbackEl.className = "";
   summaryEl.hidden = true;
   againBtn.hidden = true;
   nextBtn.hidden = true;
@@ -81,6 +83,7 @@ function showQuestion() {
 
   answered = false;
   feedbackEl.textContent = "";
+  feedbackEl.className = "";
   nextBtn.hidden = true;
   choicesEl.innerHTML = "";
   typedInput.value = "";
@@ -114,9 +117,10 @@ function showQuestion() {
     btn.className = "choice";
     btn.textContent = option;
     btn.addEventListener("click", () => {
-      btn.classList.add(option === correct ? "right" : "wrong");
+      if (answered) return;
+      if (option !== correct) btn.classList.add("wrong");
       markRight(correct);
-      answer(option === correct);
+      answer(option === correct, btn);
     });
     choicesEl.appendChild(btn);
   }
@@ -129,9 +133,14 @@ function markRight(correct) {
 }
 
 // Called once per question with whether the answer was right.
-async function answer(isCorrect) {
+// element is the button or input to animate.
+async function answer(isCorrect, element) {
   if (answered || !currentCard(session)) return;
   answered = true;
+
+  animateAnswer(element, isCorrect);
+  updateStreak(isCorrect);
+  renderStreak(streakEl);
 
   const now = Date.now();
   const card = currentCard(session);
@@ -144,9 +153,9 @@ async function answer(isCorrect) {
 
   session = recordAnswer(session, isCorrect);
   const info = entryOf.get(card.word) || { reading: "", meaning: "" };
-  feedbackEl.textContent = isCorrect
-    ? "Correct."
-    : `Not quite. Reading: ${info.reading}. Meaning: ${shortMeaning(info.meaning)}`;
+  const answerText = typedMode ? info.reading : shortMeaning(info.meaning);
+  feedbackEl.className = isCorrect ? "feedback-correct" : "feedback-wrong";
+  feedbackEl.textContent = feedbackMessage(isCorrect, answerText);
   nextBtn.hidden = false;
 }
 
@@ -154,7 +163,7 @@ function submitTyped() {
   if (answered || !currentCard(session)) return;
   const card = currentCard(session);
   const info = entryOf.get(card.word) || { reading: "", meaning: "" };
-  answer(checkTyped(typedInput.value, info.reading));
+  answer(checkTyped(typedInput.value, info.reading), typedInput);
 }
 
 function showSummary() {
@@ -183,6 +192,7 @@ async function init() {
   }
   allMeanings = entries.map((e) => shortMeaning(e.meaning)).filter(Boolean);
   deck = await loadDeck();
+  renderStreak(streakEl);
   startNewSession();
 }
 

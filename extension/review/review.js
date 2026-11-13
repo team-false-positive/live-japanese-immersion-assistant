@@ -1,5 +1,5 @@
 // extension/review/review.js
-// Week 7 Module C: review session.
+// Week 7 Module C, restyled in Week 9 Module C.
 //
 // Shows the most overdue word with four meanings to choose from. Each answer
 // goes through review() from the scheduler, and a wrong answer also runs
@@ -9,6 +9,7 @@
 const CARDS_KEY = "cards";
 
 const progressEl = document.getElementById("progress");
+const streakEl = document.getElementById("streak");
 const sessionEl = document.getElementById("session");
 const wordEl = document.getElementById("word");
 const readingEl = document.getElementById("reading");
@@ -26,6 +27,7 @@ let deck = {};             // word -> card (see scheduler.js)
 let current = null;        // card being reviewed
 let correctMeaning = "";
 let answered = false;
+let allEntries = [];
 
 // The first meaning, shortened: "obvious, clear, plain" -> "obvious"
 function shortMeaning(meaning) {
@@ -62,10 +64,10 @@ function updateProgress() {
 }
 
 // Four choices: the right meaning plus three from other dictionary words.
-function buildChoices(correct, allEntries) {
+function buildChoices(correct, entries) {
   const others = new Set();
   while (others.size < 3) {
-    const pick = allEntries[Math.floor(Math.random() * allEntries.length)];
+    const pick = entries[Math.floor(Math.random() * entries.length)];
     const m = shortMeaning(pick.meaning);
     if (m && m !== correct) others.add(m);
   }
@@ -77,13 +79,12 @@ function buildChoices(correct, allEntries) {
   return options;
 }
 
-let allEntries = [];
-
 function showNext() {
   const due = dueWords(Object.values(deck), Date.now());
   updateProgress();
   nextBtn.hidden = true;
   feedbackEl.textContent = "";
+  feedbackEl.className = "";
 
   if (due.length === 0) {
     sessionEl.hidden = true;
@@ -120,11 +121,15 @@ async function answer(choice, button) {
   const now = Date.now();
   const correct = choice === correctMeaning;
 
-  // Mark the buttons: the right one green, a wrong pick red.
+  // Mark the buttons: the right one green, a wrong pick red, then animate.
   for (const b of choicesEl.querySelectorAll(".choice")) {
     if (b.textContent === correctMeaning) b.classList.add("right");
   }
   if (!correct) button.classList.add("wrong");
+  animateAnswer(button, correct);
+
+  updateStreak(correct);
+  renderStreak(streakEl);
 
   // Update the deck: review the card, then propagate on a wrong answer.
   deck[current.word] = review(current, correct, now);
@@ -134,9 +139,8 @@ async function answer(choice, button) {
   }
   await saveDeck();
 
-  feedbackEl.textContent = correct
-    ? "Correct."
-    : `Not quite. It means: ${correctMeaning}`;
+  feedbackEl.className = correct ? "feedback-correct" : "feedback-wrong";
+  feedbackEl.textContent = feedbackMessage(correct, correctMeaning);
   nextBtn.hidden = false;
   updateProgress();
 }
@@ -166,6 +170,7 @@ async function init() {
   allEntries = await loadDictionary();
   deck = await loadDeck();
   progressEl.textContent = "";
+  renderStreak(streakEl);
   showNext();
 }
 

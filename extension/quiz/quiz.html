@@ -3,20 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Quiz</title>
+  <link rel="stylesheet" href="../ui/theme.css" />
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 24px; max-width: 640px; }
-    h1 { font-size: 20px; }
-    #progress { color: #666; }
-    .prompt { font-size: 40px; margin: 8px 0; }
-    .hint { color: #666; font-size: 18px; margin-bottom: 14px; }
-    .choice { display: block; width: 100%; text-align: left; padding: 10px 14px; margin: 6px 0;
-              font-size: 16px; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; }
-    .choice:hover { background: #f2f4ff; }
-    .choice.right { background: #d8f5dc; border-color: #2e7d32; }
-    .choice.wrong { background: #fde2e2; border-color: #c62828; }
+    .prompt { font-size: 44px; margin: 8px 0; color: var(--ink); }
     #typed-input { font-size: 18px; padding: 6px; width: 240px; }
-    button.action { padding: 8px 18px; font-size: 15px; margin-top: 8px; }
-    #feedback { margin: 12px 0; font-size: 16px; }
+    #feedback { margin: 12px 0; font-size: 16px; min-height: 22px; }
     #summary { font-size: 18px; margin-top: 16px; }
     .modes { margin-bottom: 14px; }
   </style>
@@ -30,29 +21,31 @@
       <option value="typed">Typed recall (reading)</option>
     </select>
   </div>
-  <p id="progress">Loading...</p>
+  <p id="progress" class="hint">Loading...</p>
+  <div id="streak" class="streak"></div>
 
   <div id="question" hidden>
-    <div id="prompt" class="prompt"></div>
-    <div id="hint" class="hint"></div>
+    <div id="prompt" class="prompt ja"></div>
+    <div id="hint" class="hint ja"></div>
     <div id="choices"></div>
     <div id="typed" hidden>
-      <input id="typed-input" type="text" placeholder="Type the reading in hiragana" />
-      <button id="submit" class="action">Check</button>
+      <input id="typed-input" class="ja" type="text" placeholder="Type the reading in hiragana" />
+      <button id="submit" class="btn btn-primary">Check</button>
     </div>
     <div id="feedback"></div>
-    <button id="next" class="action" hidden>Next</button>
+    <button id="next" class="btn btn-primary" hidden>Next</button>
   </div>
 
-  <div id="summary" hidden></div>
+  <div id="summary" class="card" hidden></div>
   <p id="empty" hidden>Nothing is due right now. Come back later, or use the review screen.</p>
-  <button id="again" class="action" hidden>Start again</button>
+  <button id="again" class="btn btn-primary" hidden>Start again</button>
 
   <!-- Shared logic, loaded in order. Each is a plain script with global functions. -->
   <script src="../graph/word-graph.js"></script>
   <script src="../scheduler/scheduler.js"></script>
   <script src="../scheduler/propagation.js"></script>
-  <script src="quiz-engine.js"></script>
+  <script src="../quiz/quiz-engine.js"></script>
+  <script src="../ui/feedback.js"></script>
   <script src="quiz.js"></script>
 </body>
 </html>
