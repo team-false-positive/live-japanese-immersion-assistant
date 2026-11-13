@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Live Japanese Immersion Assistant</title>
   <link rel="stylesheet" href="popup.css" />
+  <link rel="stylesheet" href="../ui/theme.css" />
 </head>
 <body>
   <div class="popup-container">
@@ -21,14 +22,14 @@
       <label for="history-search-input">Where have I seen this word?</label>
       <div class="search-row">
         <input type="text" id="history-search-input" placeholder="Type a Japanese word" />
-        <button id="history-search-btn">Search</button>
+        <button id="history-search-btn" class="btn">Search</button>
       </div>
       <ul id="history-results"></ul>
     </div>
 
     <!-- Week 6 Module B: live tab-audio capture -->
     <div class="capture-section">
-      <button id="capture-btn">Start capturing this tab</button>
+      <button id="capture-btn" class="btn btn-primary">Start capturing this tab</button>
       <p id="capture-status"></p>
     </div>
 
@@ -36,7 +37,7 @@
     <a href="../review/review.html" target="_blank">Review</a>
     <a href="../quiz/quiz.html" target="_blank">Quiz</a>
     <a href="../progress/progress.html" target="_blank">JLPT progress</a>
-    <button id="open-options">Settings</button>
+    <button id="open-options" class="btn btn-primary">Settings</button>
   </div>
 
   <script src="popup.js"></script>
