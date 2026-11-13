@@ -1,12 +1,12 @@
 /* extension/ui/overlay.css
- * Week 9 Module D: subtitle overlay styling. See docs/style-guide.md.
+ * Week 9 Module D (subtitle overlay), plus Week 4 B and Week 5 B (lookup bubble).
+ * See docs/style-guide.md.
  *
  * Loaded with the content scripts (see manifest.json "css"). These rules
  * override the overlay's own styles, so subtitle-overlay.js does not need changing.
- * The overlay sits on someone else's video, so it stays quiet: semi-transparent,
- * no animation, text no larger than 22 px, and clicks pass through to the video.
  */
 
+/* The bar stays quiet: semi-transparent, no animation, and only its text takes clicks. */
 #ljia-subtitle-overlay-bar {
   background: rgba(31, 31, 36, 0.78) !important;
   border-radius: 12px !important;
@@ -24,6 +24,8 @@
   font-weight: 600 !important;
   color: #ffffff !important;
   line-height: 1.4 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 #ljia-subtitle-overlay-bar .ljia-en {
@@ -31,4 +33,58 @@
   color: #e5e5ea !important;
   margin-top: 4px !important;
   line-height: 1.3 !important;
+}
+
+/* The word bubble shown after a click on subtitle text. */
+.ljia-bubble {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 260px;
+  background: #ffffff;
+  color: #1f1f24;
+  border: 1px solid #e2dccd;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 12px 14px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ljia-bubble .word {
+  font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #2e3a87;
+}
+
+.ljia-bubble .reading {
+  color: #6b6b73;
+  font-size: 13px;
+}
+
+.ljia-bubble button {
+  font: inherit;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #2e3a87;
+  background: #2e3a87;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.ljia-bubble button:hover {
+  background: #3a4aa0;
+}
+
+.ljia-bubble button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ljia-bubble .status {
+  color: #3b7d4f;
+  font-size: 13px;
+  margin-top: 6px;
 }

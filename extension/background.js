@@ -9,6 +9,7 @@ import {
   getWatchProgress,
   recordWordOccurrence,
   getWordHistory,
+  saveWord,
 } from "./storage/storage.js";
 
 // Tab that tab-audio capture is running on. Whisper text is sent here.
@@ -18,6 +19,9 @@ let captureTabId = null;
 // Last watch position saved. A paused video reports the same position again
 // and again, so identical saves are skipped.
 let lastSaved = null;
+
+// Dictionary for click-to-lookup, loaded the first time it is needed.
+let dictionaryMap = null;
 
 // Runs once, the moment the extension is installed or updated.
 chrome.runtime.onInstalled.addListener((details) => {
@@ -51,6 +55,58 @@ async function translateText(japaneseText) {
   }
 }
 
+// Loads the dictionary into a map, word -> entry. Runs once.
+async function getDictionary() {
+  if (dictionaryMap) return dictionaryMap;
+  const text = await (await fetch(chrome.runtime.getURL("data/dictionary_full.tsv"))).text();
+  const map = new Map();
+  for (const line of text.split(/\r?\n/)) {
+    const [word = "", reading = "", meaning = ""] = line.split("\t");
+    const w = word.trim();
+    if (w && !map.has(w)) {
+      map.set(w, { word: w, reading: reading.trim(), meaning: meaning.trim() });
+    }
+  }
+  dictionaryMap = map;
+  return map;
+}
+
+// Finds the longest dictionary word that contains position `index` in `run`.
+// `run` is a stretch of Japanese text, so words can be matched inside it.
+async function lookupInRun(run, index) {
+  const dict = await getDictionary();
+  for (let len = Math.min(8, run.length); len >= 1; len--) {
+    const first = Math.max(0, index - len + 1);
+    const last = Math.min(index, run.length - len);
+    for (let start = first; start <= last; start++) {
+      const entry = dict.get(run.substr(start, len));
+      if (entry) return entry;
+    }
+  }
+  return null;
+}
+
+// Saves a word: the saved-words store, a watch occurrence, and the review deck.
+async function saveWordEverywhere(message) {
+  await saveWord(message.word, { reading: message.reading, meaning: message.meaning });
+  await recordWordOccurrence(
+    message.word,
+    message.videoId,
+    message.platform,
+    message.timestampSeconds,
+    message.show
+  );
+
+  // Add to the review deck, unless it is already there.
+  const stored = await chrome.storage.local.get("cards");
+  const cards = stored.cards || {};
+  if (!cards[message.word]) {
+    cards[message.word] = { word: message.word, interval: 1, due: Date.now(), correct: 0, wrong: 0 };
+    await chrome.storage.local.set({ cards });
+  }
+  return { success: true };
+}
+
 // Central message hub. Content scripts, the popup, and the offscreen page
 // send messages here when they need something.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -59,6 +115,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "PING") {
     sendResponse({ type: "PONG", receivedAt: Date.now() });
     return true; // keep the message channel open for the async response
+  }
+
+  // ---- Week 4 Module B: click-to-lookup ----
+  if (message.type === "LOOKUP_WORD") {
+    lookupInRun(message.run, message.index)
+      .then((entry) => sendResponse({ entry }))
+      .catch((error) => sendResponse({ entry: null, error: error.message }));
+    return true;
+  }
+
+  // ---- Week 5 Module B: save word ----
+  if (message.type === "SAVE_WORD") {
+    saveWordEverywhere(message)
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
   }
 
   if (message.type === "SAVE_WATCH_PROGRESS") {
