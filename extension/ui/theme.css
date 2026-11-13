@@ -1,0 +1,195 @@
+/* extension/ui/theme.css
+ * Week 9 Module A: shared design system. See docs/style-guide.md.
+ * Every page links this file and uses its classes instead of writing new styles.
+ */
+
+:root {
+  --indigo: #2e3a87;
+  --indigo-hover: #3a4aa0;
+  --indigo-soft: #e8ebf7;
+  --vermillion: #e34b2f;
+  --vermillion-soft: #fde9e4;
+  --matcha: #3b7d4f;
+  --matcha-soft: #e3f2e7;
+  --washi: #f7f3e8;
+  --ink: #1f1f24;
+  --muted: #6b6b73;
+  --line: #e2dccd;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow: 0 2px 8px rgba(31, 31, 36, 0.08);
+  --font-en: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-ja: "Yu Gothic UI", "Meiryo", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --ease: 200ms ease-out;
+}
+
+body {
+  background: var(--washi);
+  color: var(--ink);
+  font-family: var(--font-en);
+  font-size: 16px;
+  margin: 0;
+  padding: 24px;
+}
+
+h1 {
+  color: var(--indigo);
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+h2 {
+  color: var(--ink);
+  font-size: 16px;
+  margin: 24px 0 8px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.ja {
+  font-family: var(--font-ja);
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin: 12px 0;
+}
+
+/* Buttons */
+.btn {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--ease), transform var(--ease);
+}
+
+.btn:hover {
+  background: var(--indigo-soft);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--indigo-hover);
+}
+
+/* Answer choices (quiz and review) */
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  margin: 8px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--ease), border-color var(--ease);
+}
+
+.choice:hover {
+  background: var(--indigo-soft);
+  border-color: var(--indigo);
+}
+
+.choice.right {
+  background: var(--matcha-soft);
+  border-color: var(--matcha);
+}
+
+.choice.wrong {
+  background: var(--vermillion-soft);
+  border-color: var(--vermillion);
+}
+
+/* Progress */
+.progress-bar {
+  height: 12px;
+  background: var(--indigo-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--indigo);
+  border-radius: 999px;
+  transition: width 400ms ease-out;
+}
+
+/* Badges and feedback */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--indigo-soft);
+  color: var(--indigo);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.streak {
+  font-weight: 700;
+  color: var(--vermillion);
+}
+
+.feedback-correct {
+  color: var(--matcha);
+  font-weight: 600;
+}
+
+.feedback-wrong {
+  color: var(--vermillion);
+  font-weight: 600;
+}
+
+/* Motion */
+@keyframes pop {
+  0% { transform: scale(0.96); }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.pop {
+  animation: pop 300ms ease-out;
+}
+
+.shake {
+  animation: shake 260ms ease-in-out;
+}
+
+/* Respect the system setting for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
