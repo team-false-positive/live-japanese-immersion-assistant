@@ -1,0 +1,4 @@
+Source: OpenJLPT, https://github.com/evanclan/OpenJLPT
+License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+Converted: word and JLPT level columns extracted from the csv/vocab-n1 to vocab-n5 files, by tools/convert-jlpt.js.
+Date: 13 November 2026
