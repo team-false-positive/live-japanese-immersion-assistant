@@ -38,7 +38,7 @@ async function loadDictionary() {
   const url = chrome.runtime.getURL("data/dictionary_full.tsv");
   const text = await (await fetch(url)).text();
   const entries = parseDictionary(text);
-  graph = buildWordGraph(entries);
+  // The graph is built on the first wrong answer, not at page load.
   for (const e of entries) {
     if (!entryOf.has(e.word)) entryOf.set(e.word, { reading: e.reading, meaning: e.meaning });
   }
@@ -134,6 +134,7 @@ async function answer(choice, button) {
   // Update the deck: review the card, then propagate on a wrong answer.
   deck[current.word] = review(current, correct, now);
   if (!correct) {
+    if (!graph) graph = buildWordGraph(allEntries);
     const updated = propagateWrongAnswer(Object.values(deck), graph, current.word, now);
     deck = Object.fromEntries(updated.map((c) => [c.word, c]));
   }
