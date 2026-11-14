@@ -1,5 +1,5 @@
 // extension/quiz/quiz.js
-// Week 8 Module A and B, restyled in Week 9 Module C.
+// Week 8 Module A and B, restyled in Week 9 Module C, fixed in Week 11 B (bug 6).
 //
 // Uses the same deck as the review screen (chrome.storage.local "cards"), so
 // answers here affect the same schedule. Wrong answers also run propagation.
@@ -42,6 +42,29 @@ function meaningOfWord(word) {
   return info ? shortMeaning(info.meaning) : "";
 }
 
+// A time gap as plain words: "about 2 hours", "about 15 minutes", "about 3 days".
+function describeWait(ms) {
+  const minutes = Math.max(1, Math.round(ms / 60000));
+  if (minutes < 60) return `about ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `about ${hours} hour${hours === 1 ? "" : "s"}`;
+  const days = Math.round(hours / 24);
+  return `about ${days} days`;
+}
+
+// The message shown when nothing is due: when the next word comes back.
+function nothingDueMessage() {
+  const now = Date.now();
+  const upcoming = Object.values(deck)
+    .map((c) => c.due)
+    .filter((due) => due > now)
+    .sort((a, b) => a - b);
+  if (upcoming.length === 0) {
+    return "Nothing is due, and your deck is empty. Add words on the Review screen.";
+  }
+  return `Nothing is due right now. The next word comes back in ${describeWait(upcoming[0] - now)}. Come back then, or add words on the Review screen.`;
+}
+
 function loadDeck() {
   return new Promise((resolve) => {
     chrome.storage.local.get(CARDS_KEY, (result) => resolve(result[CARDS_KEY] || {}));
@@ -66,7 +89,9 @@ function startNewSession() {
 
   if (due.length === 0) {
     progressEl.textContent = "";
+    emptyEl.textContent = nothingDueMessage();
     emptyEl.hidden = false;
+    againBtn.hidden = false;
     return;
   }
   session = startSession(due, SESSION_SIZE);
@@ -146,6 +171,7 @@ async function answer(isCorrect, element) {
   const card = currentCard(session);
   deck[card.word] = review(deck[card.word] || card, isCorrect, now);
   if (!isCorrect) {
+    if (!graph) graph = buildWordGraph(allEntries);
     const updated = propagateWrongAnswer(Object.values(deck), graph, card.word, now);
     deck = Object.fromEntries(updated.map((c) => [c.word, c]));
   }
@@ -183,14 +209,16 @@ nextBtn.addEventListener("click", showQuestion);
 againBtn.addEventListener("click", startNewSession);
 modeSelect.addEventListener("change", startNewSession);
 
+let allEntries = [];
+
 async function init() {
   const text = await (await fetch(chrome.runtime.getURL("data/dictionary_full.tsv"))).text();
-  const entries = parseDictionary(text);
-  graph = buildWordGraph(entries);
-  for (const e of entries) {
+  allEntries = parseDictionary(text);
+  graph = buildWordGraph(allEntries);
+  for (const e of allEntries) {
     if (!entryOf.has(e.word)) entryOf.set(e.word, { reading: e.reading, meaning: e.meaning });
   }
-  allMeanings = entries.map((e) => shortMeaning(e.meaning)).filter(Boolean);
+  allMeanings = allEntries.map((e) => shortMeaning(e.meaning)).filter(Boolean);
   deck = await loadDeck();
   renderStreak(streakEl);
   startNewSession();
