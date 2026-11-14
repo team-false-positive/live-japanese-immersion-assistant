@@ -21,6 +21,7 @@ const JS_TESTS = [
   "extension/scheduler/tune-propagation.js",
   "extension/quiz/test-quiz-engine.js",
   "extension/quiz/test-distractors.js",
+  "extension/quiz/test-romaji.js",
   "extension/kanji/test-kanji-tree.js",
   "extension/progress/test-progress.js",
   "extension/recommend/test-next-words.js",
