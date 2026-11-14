@@ -10,6 +10,7 @@
     #feedback { margin: 12px 0; font-size: 16px; min-height: 22px; }
     #summary { font-size: 18px; margin-top: 16px; }
     .modes { margin-bottom: 14px; }
+    #listen { margin: 8px 0; }
   </style>
 </head>
 <body>
@@ -27,9 +28,11 @@
   <div id="question" hidden>
     <div id="prompt" class="prompt ja"></div>
     <div id="hint" class="hint ja"></div>
+    <button id="listen" class="btn">Listen</button>
+    <span id="listen-status" class="hint"></span>
     <div id="choices"></div>
     <div id="typed" hidden>
-      <input id="typed-input" class="ja" type="text" placeholder="Type the reading in hiragana" />
+      <input id="typed-input" class="ja" type="text" placeholder="Type the reading (hiragana, or romaji such as kansenshou)" />
       <button id="submit" class="btn btn-primary">Check</button>
     </div>
     <div id="feedback"></div>
@@ -44,7 +47,7 @@
   <script src="../graph/word-graph.js"></script>
   <script src="../scheduler/scheduler.js"></script>
   <script src="../scheduler/propagation.js"></script>
-  <script src="../quiz/quiz-engine.js"></script>
+  <script src="quiz-engine.js"></script>
   <script src="../ui/feedback.js"></script>
   <script src="quiz.js"></script>
 </body>

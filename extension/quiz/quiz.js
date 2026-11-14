@@ -1,9 +1,13 @@
 // extension/quiz/quiz.js
-// Week 8 Module A and B, restyled in Week 9 Module C, fixed in Week 11 B (bug 6).
+// Week 8 Module A and B, restyled in Week 9 Module C, fixed in Week 11 B (rows 2 and 6),
+// Listen button added (Week 11 extra feature).
 //
 // Uses the same deck as the review screen (chrome.storage.local "cards"), so
 // answers here affect the same schedule. Wrong answers also run propagation.
 // In multiple-choice mode, wrong choices come from graph neighbors.
+//
+// Listen speaks the Japanese word with the browser's built-in speech. It uses
+// the Japanese voice installed in Windows, so it works offline once that is set up.
 
 const CARDS_KEY = "cards";
 const SESSION_SIZE = 10;
@@ -13,6 +17,8 @@ const streakEl = document.getElementById("streak");
 const questionEl = document.getElementById("question");
 const promptEl = document.getElementById("prompt");
 const hintEl = document.getElementById("hint");
+const listenBtn = document.getElementById("listen");
+const listenStatus = document.getElementById("listen-status");
 const choicesEl = document.getElementById("choices");
 const typedEl = document.getElementById("typed");
 const typedInput = document.getElementById("typed-input");
@@ -25,12 +31,14 @@ const againBtn = document.getElementById("again");
 const modeSelect = document.getElementById("mode");
 
 let entryOf = new Map();    // word -> { reading, meaning }
+let allEntries = [];        // the whole dictionary, for the fallback choices
 let allMeanings = [];       // every short meaning, used only as a fallback
 let graph = null;           // word graph, for distractors and propagation
 let deck = {};              // word -> card
 let session = null;
 let answered = false;
 let typedMode = false;
+let currentWord = "";       // the Japanese word of the question on screen
 
 function shortMeaning(meaning) {
   return (meaning || "").split(",")[0].trim();
@@ -65,6 +73,46 @@ function nothingDueMessage() {
   return `Nothing is due right now. The next word comes back in ${describeWait(upcoming[0] - now)}. Come back then, or add words on the Review screen.`;
 }
 
+// ---- Listen: speak the Japanese word ----
+
+// The Japanese voice installed in Windows, if there is one.
+function japaneseVoice() {
+  return speechSynthesis
+    .getVoices()
+    .find((v) => v.lang && v.lang.toLowerCase().startsWith("ja")) || null;
+}
+
+function speakJapanese(text) {
+  listenStatus.textContent = "";
+  if (!("speechSynthesis" in window)) {
+    listenStatus.textContent = "Sound is not supported in this browser.";
+    return;
+  }
+  const voice = japaneseVoice();
+  if (!voice) {
+    listenStatus.textContent =
+      "No Japanese voice found. Install Japanese in Windows (Settings, Time & language, Language & region) to hear words.";
+    return;
+  }
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ja-JP";
+  utterance.voice = voice;
+  utterance.rate = 0.9;
+  speechSynthesis.speak(utterance);
+}
+
+listenBtn.addEventListener("click", () => {
+  if (currentWord) speakJapanese(currentWord);
+});
+
+// Browsers load voices a moment after the page opens, so refresh the list when they arrive.
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = () => {};
+}
+
+// ---- Deck storage ----
+
 function loadDeck() {
   return new Promise((resolve) => {
     chrome.storage.local.get(CARDS_KEY, (result) => resolve(result[CARDS_KEY] || {}));
@@ -81,6 +129,7 @@ function startNewSession() {
   const due = dueWords(Object.values(deck), Date.now());
   feedbackEl.textContent = "";
   feedbackEl.className = "";
+  listenStatus.textContent = "";
   summaryEl.hidden = true;
   againBtn.hidden = true;
   nextBtn.hidden = true;
@@ -109,6 +158,7 @@ function showQuestion() {
   answered = false;
   feedbackEl.textContent = "";
   feedbackEl.className = "";
+  listenStatus.textContent = "";
   nextBtn.hidden = true;
   choicesEl.innerHTML = "";
   typedInput.value = "";
@@ -117,6 +167,7 @@ function showQuestion() {
   const card = currentCard(session);
   const info = entryOf.get(card.word) || { reading: "", meaning: "" };
   const correct = shortMeaning(info.meaning);
+  currentWord = card.word;
   progressEl.textContent = `Question ${session.index + 1} of ${session.queue.length}`;
 
   if (typedMode) {
@@ -171,7 +222,6 @@ async function answer(isCorrect, element) {
   const card = currentCard(session);
   deck[card.word] = review(deck[card.word] || card, isCorrect, now);
   if (!isCorrect) {
-    if (!graph) graph = buildWordGraph(allEntries);
     const updated = propagateWrongAnswer(Object.values(deck), graph, card.word, now);
     deck = Object.fromEntries(updated.map((c) => [c.word, c]));
   }
@@ -208,8 +258,6 @@ typedInput.addEventListener("keydown", (event) => {
 nextBtn.addEventListener("click", showQuestion);
 againBtn.addEventListener("click", startNewSession);
 modeSelect.addEventListener("change", startNewSession);
-
-let allEntries = [];
 
 async function init() {
   const text = await (await fetch(chrome.runtime.getURL("data/dictionary_full.tsv"))).text();
