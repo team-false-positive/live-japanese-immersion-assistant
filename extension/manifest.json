@@ -29,7 +29,8 @@
         "content-scripts/watch-history.js",
         "content-scripts/caption-router.js",
         "content-scripts/smart-rewind.js",
-        "content-scripts/word-lookup.js"
+        "content-scripts/word-lookup.js",
+        "content-scripts/translate-line.js"
       ],
       "run_at": "document_idle",
       "css": ["ui/overlay.css"]
