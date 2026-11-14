@@ -73,7 +73,7 @@ Work through every feature the way a learner would. Log each problem in the tabl
 | 4 | Popup | The **Kanji** link was missing from the popup. | Open the popup and look at the links | Major | Fixed |
 | 5 | Popup | The placeholder text said "wired in (Week 4)", which was out of date. | Open the popup and read the grey box | Minor | Fixed |
 | 6 | Quiz | After a session, **Start again** shows "Nothing is due right now" with no explanation, so it looks broken. | Finish a session, then click Start again | Major | Fixed |
-| 7 | Review (Add a word) | The box only accepts the written form. A reading such as あう gives "not in the dictionary", with no way forward. | Open Review, type あう in the Add box, click Add | Major | Open |
+| 7 | Review (Add a word) | The box only accepts the written form. A reading such as あう gives "not in the dictionary", with no way forward. | Open Review, type あう in the Add box, click Add | Major | Fixed |
 
 ## After the test
 
