@@ -69,7 +69,7 @@ Work through every feature the way a learner would. Log each problem in the tabl
 |---|---|---|---|---|---|
 | 1 | Next words | Clicking **Add to review** did nothing. Console showed `ReferenceError: createCard is not defined` (recommend/recommend.js:55). | Open Next words from the popup, click Add to review on any word | Blocker | Fixed: scheduler.js added to recommend.html |
 | 2 | Quiz (typed recall) | A learner who hasn't set up Japanese input can't type a reading, and the screen gives no hint about this. | Open Quiz, choose Typed recall, try to type a reading without Japanese input | Major | Open |
-| 3 | JLPT progress | The bars show no colour at 0% learned, and seen words appear only as text. | Open JLPT progress with words in the deck | Minor | Open |
+| 3 | JLPT progress | The bars show no colour at 0% learned, and seen words appear only as text. | Open JLPT progress with words in the deck | Minor | Fixed |
 | 4 | Popup | The **Kanji** link was missing from the popup. | Open the popup and look at the links | Major | Fixed |
 | 5 | Popup | The placeholder text said "wired in (Week 4)", which was out of date. | Open the popup and read the grey box | Minor | Fixed |
 | 6 | Quiz | After a session, **Start again** shows "Nothing is due right now" with no explanation, so it looks broken. | Finish a session, then click Start again | Major | Fixed |
